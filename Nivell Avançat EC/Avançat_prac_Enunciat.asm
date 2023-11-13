@@ -42,10 +42,6 @@ Pop_all macro
    	pop ebx
    	pop eax
 endm
-   
-   
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Situar el cursor en una fila i una columna de la pantalla
@@ -143,7 +139,6 @@ getch endp
 
 
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Posicionar el cursor a la pantalla, dins el tauler, en funció de
 ; les variables row (int) i col (char), a partir dels
@@ -167,11 +162,34 @@ getch endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 posCurScreen proc
-    push ebp
+        push ebp
 	mov  ebp, esp
 
+	push eax
+	push ebx
+								;Al no poder accedir M,M utilitzem registres auxiliars
+	mov  eax, 0					;Inicialitzacio del registre eax
+	mov  ebx, 0					;Inicialitzacio del registre ebx
+
+								;rowScreen formula (rowScreen=rowScreenIni+(row*2))
+	mov  eax, [row]				;Carreguem el contingut de la variable [row] a eax
+	dec  eax					;Restem 1 perquè quedi entre 0 i 4 
+	shl  eax, 1					;Multipliquem per 2
+	add  eax, [rowScreenIni]	;Sumem el valor de eax amb el contingut de la variable [rowScreenIni]
+	mov  [rowScreen], eax		;El resultat de eax el guardem a la variable [rowScreen]
+
+								;colScreen formula (colScreen=colScreenIni+(col*4)
+	mov  bl, [col]				;Carreguem el contingut de la variable [col] al registre de 8 bits bl
+	sub  ebx, 65				;Restem la "A" per obtenir el numemro de columna 
+	shl  ebx, 2					;Multipliquem per 4 
+	add  ebx, [colScreenIni]	;Sumem el valor de ebx amb el contingut de la variable [colScreenini]
+	mov  [colScreen], ebx		;El resultat de ebx al guardem a la variable [colScreen]
+								
+	call gotoxy					;Cridar la subrutina gotoxy
 
 
+	pop ebx
+	pop eax
 
 	mov esp, ebp
 	pop ebp
@@ -193,16 +211,40 @@ posCurScreen endp
 getMove proc
    push ebp
    mov  ebp, esp
+   
+   push eax
 
+   mov  eax, 0					;Inicialitzacio del registre auxiliar eax
 
+   bucle:
+		call getch				;Crida subrutina getch (llegeix caracter)
 
+   mov  al, [tecla]				;Copiar la tecla apretada al registre al (8 bits perque es char)
 
-   mov esp, ebp
-   pop ebp
-   ret
+   cmp  al, 's'					;Comprobar si la tecla es igual a 's'
+   je   fi						;Si es igual saltar a fi
+
+   cmp  al, ' '					;Comprobar si la tecla es igual a ' ' (espai)
+   je   fi						;Si es igual saltar a fi
+
+   cmp  al, 'i'					;Comprobar si la tecla es igual o superior a 'i'
+   jl   bucle					;Si es inferior saltar a bucle
+
+   cmp  al, 'l'					;Comprobar si la tecla es igual o infrior a 'l'
+   jg   bucle					;Si es major saltar a bucle
+
+   jmp  fi						;Saltar a fi
+
+   fi:
+	   mov [tecla], al			;Copiar el valor del registre al a [tecla]
+	
+	pop eax
+
+	mov esp, ebp
+	pop ebp
+	ret
 
 getMove endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Cridar a la subrutina getMove per a llegir una tecla
@@ -224,14 +266,78 @@ getMove endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 moveCursor proc
    push ebp
-   mov  ebp, esp 
+   mov  ebp, esp
 
+   push eax
+   push ebx
 
+   mov eax, 0;
+   mov ebx, 0;
 
+   call getMove						;Crida subrutina getMove (llegeix tecla)
 
-   mov esp, ebp
-   pop ebp
-   ret
+   mov  eax, [row]					;Inicialitzacio del registre eax amb el valor de [row]
+   mov  bl,  [col]					;Inicialitzacio del registre bl amb el valor de [col]
+
+   cmp  [tecla], 'i'				;Comprobar si la tecla pitjada es igual a 'i'
+   je   up							;Si es igual saltar a up
+   
+   cmp  [tecla], 'j'				;Comprobar si la tecla pitjada es igual a 'j'
+   je   left						;Si es igual saltar a left
+
+   cmp  [tecla], 'k'				;Comprobar si la tecla pitjada es igual a 'k'
+   je   down						;Si es igual saltar a down
+
+   cmp  [tecla], 'l'				;Comprobar si la tecla pitjada es igual a 'l'
+   je   right						;Si es igual saltar a right
+
+   cmp  [tecla], 's'				;Comprobar si la tecla pitjada es igual a 's'
+   je   fi							;Si es igual saltar a fi
+
+   cmp  [tecla], ' '				;Comprobar si la tecla pitjada es igual a ' ' (espai)
+   je   fi
+
+   up:								
+		dec  eax					;Incrementar fila (Decrementar eax)
+		jmp  check_range			;Saltar a check_range
+
+   left:							
+	   dec  bl						;Decrementar columna
+	   jmp  check_range				;Saltar a check_range
+
+   down:
+	   inc  eax						;Decrementar fila (incrementar eax)
+	   jmp  check_range				;Saltara a check_range
+
+   right:
+	   inc  bl						;Incrementar columna
+	   jmp  check_range				;Saltar a check_range
+
+   check_range:						;Comprovar que la fila i la columna estiguin dins dels limits
+	   cmp  eax, 1					;limits: ([1..5] i ['A'..'D'])
+	   jl   fi
+	   cmp  eax, 5
+	   jg   fi
+	   cmp  bl, 'A'
+	   jl   fi
+	   cmp  bl, 'D'
+	   jg   fi
+
+	   mov  [row], eax				;Actualitzar valors de [row]
+	   mov  [col], bl				;Actualitzar valors de [col]
+
+	   jmp  posCur					;saltar a posCur 
+
+   posCur:
+	   call posCurScreen			;Cridar subrutina posCurScreen (posiciona cursor)
+	   jmp fi						;Saltar a fi
+
+   fi:
+	   pop ebx
+	   pop eax
+	   mov esp, ebp
+	   pop ebp
+	   ret
 
 moveCursor endp
 
@@ -248,12 +354,20 @@ moveCursorContinuous proc
 	push ebp
 	mov  ebp, esp
 
+	bucle:
+		call moveCursor				;Cridar subrutina movCursor
 
+		cmp  [tecla], 's'			;Comprobar si la tecla pitjada es igual a 's'
+		je   fi						;Si es igual saltar a fi
+		cmp  [tecla], ' '			;Comprobar si la tecla pitjada es igual a ' ' (espai)
+		je   fi						;Si es igual saltar a fi
 
+		jmp bucle					;Si no es compleix saltar a bucle
 
-	mov esp, ebp
-	pop ebp
-	ret
+	fi:
+		mov esp, ebp
+		pop ebp
+		ret
 
 moveCursorContinuous endp
 
@@ -263,7 +377,7 @@ moveCursorContinuous endp
 ; i poder obrir les caselles
 ; Calcular l’índex per a accedir a la matriu gameCards en assemblador.
 ; gameCards[row][col] en C, ´es [gameCards+indexMat] en assemblador.
-; on indexMat = (row*4 + col (convertida a número))*4 .
+; on indexMat = ((row-1)*4 + col (convertida a número))*4 .
 ;
 ; Variables utilitzades:
 ; row: fila per a accedir a la matriu gameCards
@@ -274,9 +388,28 @@ moveCursorContinuous endp
 calcIndex proc
 	push ebp
 	mov  ebp, esp
-	
 
+	push eax
+	push ebx
 
+	mov  eax, 0					;Inicialitzacio del registre eax
+	mov  ebx, 0					;Inicialitzacio del registre ebx
+
+	mov  eax, [row]				;Carreguem el contingut de [row] al registre eax
+	dec  eax					;La fila es de 1 a 5 i la matriu de 0 a 4 (per aixo decrementem eax)
+	mov  bl, [col]				;Carreguem el contingut de [col] al registre de 8 bits bl
+								
+								;indexMat = (row*4 + col (convertida a número))*4
+	sub  ebx, 65				;Convertir la columna a numero restant 'A'
+	shl  eax, 2					;Multiplicar per 4 la fila
+	add  eax, ebx				;Sumar fila mes columna
+
+	shl  eax, 2					;Multiplicar per 4 la suma
+
+	mov  [indexMat], eax		;El resultat de eax el guardem a la variable [indexMat]
+
+	pop ebx
+	pop eax
 
 	mov esp, ebp
 	pop ebp
@@ -307,13 +440,35 @@ openCard proc
 	push ebp
 	mov  ebp, esp
 
+	push eax
+	push ebx
 
+	mov eax, 0						;Inicialitzacio del registre eax
+	mov ebx, 0						;Inicialitzacio del registre ebx
 
+	call moveCursorContinuous		;Cridar subrutina moveCursorContinuous (triar la casella desitjada)
 
+	cmp  [tecla], 's'				;Comprobar que la tecla pitjada sigui igual a ' ' (espai)
+	je   fi							;si es igual salta a mostraCarta
 
-	mov esp, ebp
-	pop ebp
-	ret
+	mostrarCarta:
+		call calcIndex				;Cridar subrutina calcIndex (accedir a les components de la matriu)
+
+		mov  eax, [indexMat]		;Carreguem el valor de la variable [indexMat] al registre eax
+		
+		mov  ebx, [gameCards+eax]	;Carreguem el valor de la variable [gameCards+eax] al registre ebx
+		add  ebx, 48				;48 = 0 per obtenir el numero al girar la carta
+		mov  [carac], bl			;Guardem el resultat obtingut de 8 bits a la variable [carac]
+
+		call printch				;Cridar subrutina printch
+
+	fi: 
+		pop ebx
+		pop eax
+
+		mov esp, ebp
+		pop ebp
+		ret
 
 openCard endp
 
@@ -328,12 +483,19 @@ openCardContinuous proc
 	push ebp
 	mov  ebp, esp
 
+	bucle:
+		call posCurScreen			;Cridar subrutina posCurScreen
+		call openCard				;Cridar subrutina openCard
 
+		cmp  [tecla], 's'			;Comprobar que la tecla pitjada sigui igual a 's'
+		je   fi						;Si es igual saltar a fi
 
+		jmp  bucle					;Si no es igual, saltar a bucle
 
-	mov esp, ebp
-	pop ebp
-	ret
+	fi:
+		mov esp, ebp
+		pop ebp
+		ret
 
 openCardContinuous endp
 
@@ -372,10 +534,124 @@ openPair proc
 	push ebp
 	mov  ebp, esp
 
+	push eax						;no es perdi informacio
+	push ebx
+	push ecx
+	push edx
+
+	mov eax, 0						;inicialitzar tots els registres usats a 0
+	mov ebx, 0
+	mov ecx, 0
+	mov edx, 0
+	mov [HitPair], 0				;incialitzem variable a 0 (1-indica que hi ha parella)
+
+	mov [Num_Card], 0				;inicialitzem la variable que indica el numero de carta
+
+	mov  [rowScreen], 3				;Mostrar número del jugador que toca
+	mov  [colScreen], 41			;(rowScreeen i colScreen) indica on volem el cursor
+	call gotoxy						;pociciona el cursor segons rowScreen i colScreen
+	mov  eax, [Player]				;movem (1/2) a eax. numero de jugador
+	add  eax, 48					;sumem el codi ascii per tenir el (1/2 en ascii)
+	mov  [carac], al				;carac es de 8 bits, i conte el nuemro del jugador en ascii	
+	call printch					;escriu per pantalla el carac
+
+actualitzarCarta:
+	mov  [rowScreen], 3				;Mostra quina carta s'ha d'obrir
+	mov  [colScreen], 30			;(rowScreeen i colScreen) indica on volem el cursor
+	call  gotoxy					;pociciona el cursor segons rowScreen i colScreen
+	mov  eax, [Num_Card]			;movem el 0 de carta a eax
+	inc  eax						;incrementem en 1 per tenir el numero de carta
+	add  eax, 48					;sumem el codi ascii per tenir el (1/2 en ascii) 
+	mov  [carac], al				;carac es de 8 bits, i conte el numero del jugador en ascii
+	call printch					;escriu per pantalla el carac
+	
+	call posCurScreen				;Colocarse al tauler
+
+bucle:
+	call moveCursorContinuous		;Moure per tauler fins escollir casella
+
+ 	cmp  [tecla], 's'				;salta a fi si es clica s
+	je   fi
+
+mostrarCarta:						;comprovar carta 
+	call calcIndex					;Cridar subrutina calcIndex (accedir a les components de la matriu)
+
+	mov  eax, [indexMat]			;Carreguem el valor de la variable [indexMat] al registre eax
+		
+	shr eax, 2   ;prova (dividim pq board es char)
+
+	mov bl, [Board+eax]				;Accedeix al contingut de la posicio
+	cmp ebx, 'o'					;comprovem que estigui oberta
+	je bucle						;Si la posició està oberta, saltar al bucle per escollir una altra casella
+								
+	mov [Board+eax], 'o'			;Sinó, mostrar valor per pantalla i marcar casella com a ocupada
+	
+	shl eax , 2  ;prova multipliquem pq gamecards es int
+
+	mov  ebx, [gameCards+eax]		;Carreguem el valor de la variable [gameCards+eax] al registre ebx
+	add  ebx, 48					;48 = 0 per obtenir el numero al girar la carta
+	mov  [carac], bl				;Guardem el resultat obtingut de 8 bits a la variable [carac]
+	mov ecx, [rowScreen]			;guardem posicio de la carta 1
+	mov edx, [colScreen]
+
+	call printch					;Cridar subrutina printch per mostrar carta 1 
+
+guardarDadesCarta:
+
+	cmp [Num_Card], 1				;Comprovar si és la primera carta o la segona que s'obre (1 = segona carta)
+	je compararCartes				;Si és la segona carta, sortir del bucle
+	
+dadesCarta1:
+	inc [Num_Card]					;Incrementar valor carta a escollir
+	mov dl, [col]					;guardem la columna a la variable corresponet fisrtCol
+	mov [firstCol],	dl				;Guardar valor primera columna
+	mov ecx, [row]					;guardem la fila a la variable corresponent fistRow
+	mov [firstRow], ecx				;Guardar valor primera fila
+	mov [firstVal], ebx				;guardem el numero (en ascii) de la carta	
+	jmp actualitzarCarta			;recorem el bucle un altre cop per la segona carta
 
 
+compararCartes:
+	cmp ebx, [firstVal]				;Comparar valor 1 amb valor 2		
+	je tornarTrue					;Si són iguals, deixar imprés a la taula i sortir
 
+TreureCarta2:
+	call getch						;esperar que premis una tecla 
 
+	shr eax, 2 ;prova pq board es char
+
+	mov [Board+eax], ' '			;Sinó són iguals, canviar estat de les caselles 
+	mov [carac], ' '				;reestablir posicions del tauler a buides
+	call posCurScreen				;posicionem el cursor a la carta 1
+	call printch					;Posar en blanc segona casella escollida
+
+TreureCarta1:						
+	mov ecx, [firstRow]				;Carregar valors primera carta per eliminar
+	mov dl, [firstCol]				;carreguem a registres
+	mov [row], ecx					;movem a row i col per poder fer el calcIndex
+	mov [col], dl
+
+	call calcIndex					;Calcular posició per posar a la matriu
+	mov eax, [indexMat]				;posem la posicio de la matriu a eax
+	
+	shr eax, 2 ;proba dividim pq es char
+	
+	mov [Board+eax], ' '			;indiquem que no esta oberta
+
+	mov [carac], ' '				;Carregar espai buit per tapar casella
+	call posCurScreen
+	call printch					;Posar en blanc segona casella escollida
+	jmp fi
+
+tornarTrue:
+	mov [HitPair], 1
+	
+
+fi:
+	pop edx							;retornar estat previ a la funció
+	pop ecx
+	pop ebx
+	pop eax
 
 	mov esp, ebp
 	pop ebp
@@ -396,9 +672,14 @@ openPairsContinuous proc
 	push ebp
 	mov  ebp, esp
 
+bucle:
+	call openPair
 
+	cmp [tecla], 's'
+	je fi
+	jmp bucle
 
-
+fi:
 	mov esp, ebp
 	pop ebp
 	ret
