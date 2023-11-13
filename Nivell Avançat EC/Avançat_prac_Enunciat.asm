@@ -712,8 +712,13 @@ open2Players proc
 	push ebp
 	mov  ebp, esp
 
-
-
+	mov  [rowScreen], 3
+	mov  [colScreen], 50
+	call gotoxy
+	mov  eax, [pairsPlayer1]
+	add  eax, 48
+	mov  [carac], al
+	call printch
 
 	mov esp, ebp
 	pop ebp
