@@ -712,6 +712,7 @@ open2Players proc
 	push ebp
 	mov  ebp, esp
 
+	;mostrar parelles conseguides pel jugador 1
 	mov  [rowScreen], 3
 	mov  [colScreen], 50
 	call gotoxy
@@ -719,6 +720,17 @@ open2Players proc
 	add  eax, 48
 	mov  [carac], al
 	call printch
+
+	;mostrar parelles conseguides pel jugador 2
+	mov  [rowScreen], 3
+	mov  [colScreen], 57
+	call gotoxy
+	mov  eax, [pairsPlayer2]
+	add  eax, 48
+	mov  [carac], al
+	call printch
+
+	call posCurScreen
 
 	mov esp, ebp
 	pop ebp
