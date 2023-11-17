@@ -712,89 +712,89 @@ open2Players proc
 	push ebp
 	mov  ebp, esp
 
-	push eax
+	push eax							;Guardem el registre eax a la pila
 
 	actualitzarParelles:
 		;mostrar parelles conseguides pel jugador 1
-		mov  [rowScreen], 3
-		mov  [colScreen], 50
-		call gotoxy
-		mov  eax, [pairsPlayer1]
-		add  eax, 48
-		cmp  eax, 58
-		jne  seguir
-		mov  [carac], 49
-		call printch
-		mov [colScreen], 51
-		mov [carac], 48
-		call printch
-		jmp bucle
+		mov  [rowScreen], 3				;Indicar la fila on volem el cursor
+		mov  [colScreen], 50			;Indicar la columna on volem el cursor
+		call gotoxy						;Cridar subrutina gotoxy per posicionar (rowScreen i colScreen) el cursor 
+		mov  eax, [pairsPlayer1]		;Copiem el valor de pairsPlayer1 al registre eax
+		add  eax, 48					;Sumem 48 del codi ascii al registre eax
+		cmp  eax, 58					;Comparem el registre eax amb el valor 58
+		jne  seguir						;Si no es igual saltem a l'etiqueta seguir
+		mov  [carac], 49				;Si es igual, copiem a [carac] el valor 49 (ascii)
+		call printch					;Cridem a la subrutina printch per mostrar per pantalla el caracter
+		mov [colScreen], 51				;Copiem a [colScreen] el valor 51
+		mov [carac], 48					;Copiem a [carac] el valor 48 (ascii)
+		call printch					;Cridem a la subrutina printch per mostrar per pantalla el caracter
+		jmp bucle						;Saltem a l'etiqueta bucle
 
 	seguir:
-		mov  [carac], al
-		call printch
+		mov  [carac], al				;Copiem a [carac] el contingut del registre al
+		call printch					;Cridem a la subrutina printch per mostrar per pantalla
 
 
 		;mostrar parelles conseguides pel jugador 2
-		mov  [rowScreen], 3
-		mov  [colScreen], 57
-		call gotoxy
-		mov  eax, [pairsPlayer2]
-		add  eax, 48
-		cmp  eax, 58
-		jne  seguir2
-		mov  [carac], 49
-		call printch
-		mov [colScreen], 58
-		mov [carac], 48
-		call printch
-		jmp bucle
+		mov  [rowScreen], 3				;Indicar la fila on volem el cursor
+		mov  [colScreen], 57			;Indicar la columna on volem el cursor
+		call gotoxy						;Cridar subrutina gotoxy per posicionar (rowScreen i colScreen) el cursor
+		mov  eax, [pairsPlayer2]		;Copiem el valor de pairsPlayer2 al registre eax
+		add  eax, 48					;Sumem 48 del codi ascii al registre eax
+		cmp  eax, 58					;Comparem el registre eax amb el valor 58
+		jne  seguir2					;Si no es igual saltem a l'etiqueta seguir2
+		mov  [carac], 49				;Si es igual, copiem a [carac] el valor 49 (ascii)
+		call printch					;Cridem a la subrutina printch per mostrar per pantalla el caracter
+		mov [colScreen], 58				;Copiem a [colScreen] el valor 58
+		mov [carac], 48					;Copiem a [carac] el valor 48 (ascii)
+		call printch					;Cridem a la subrutina printch per mostrar per pantalla el caracter
+		jmp bucle						;Saltem a l'etiqueta bucle
 		
 
 	seguir2:
-		mov  [carac], al
-		call printch
-
-	call posCurScreen
+		mov  [carac], al				;Copiem a [carac] el contingut del registre al
+		call printch					;Cridem a la subrutina printch per mostrar per pantalla
+			
+	call posCurScreen					;Cridem a la subrutina posCurScreen per posicionar el cursor a on era inicialment
 
 	bucle:
-		mov eax, [pairsPlayer1]
-		add eax, [pairsPlayer2]
-		cmp eax, 10
-		je fi
+		mov eax, [pairsPlayer1]			;Copiem al registre eax el contingut de [pairsPlayer1]
+		add eax, [pairsPlayer2]			;Sumem a eax el contingut de [pairsPlayer2]
+		cmp eax, 10						;Comparem el registre eax amb 10
+		je fi							;Si es igual saltem a fi (significa que s'ha acabat la partida)
 
-		call openPair
+		call openPair					;Cridem a la subrutina openPair 
 
-		cmp  [tecla], 's'
-		je   fi
+		cmp  [tecla], 's'				;Comparem que la [tecla] amb 's'
+		je   fi							;Si es igual saltem a fi (acaba la partida perque abandona algun jugador)
 
-		cmp [HitPair], 1
-		jne actualitzarJugador
+		cmp [HitPair], 1				;Comparem HitPair amb 1 (si ha fet parella)
+		jne actualitzarJugador			;Si no ha fet parella saltem a l'etiqueta actualitzarJugador
 
-		cmp [Player], 1
-		jne player2
+		cmp [Player], 1					;Comparem si el [Player] es 1 (jugador 1)
+		jne player2						;Si no es saltem a l'etiqueta player2
 
-		inc [pairsPlayer1]
-		mov [HitPair], 0
-		jmp actualitzarParelles
+		inc [pairsPlayer1]				;Incrementem [pairsPlayer1]
+		mov [HitPair], 0				;Reiniciem la variable [HitPair]
+		jmp actualitzarParelles			;Saltem a l'etiqueta actualitzarParelles
 
 	player2:
-		inc [pairsPlayer2]
-		mov [HitPair], 0
-		jmp actualitzarParelles
-
+		inc [pairsPlayer2]				;Incrementem pairsPlayer2
+		mov [HitPair], 0				;Reiniciem la variable [HitPair]
+		jmp actualitzarParelles			;Saltem a l'etiqueta actualitzarParelles
+			
 	actualitzarJugador:
-		cmp [Player], 2
-		jge  reiniciarPlayer
-		inc [Player]
-		jmp bucle
+		cmp [Player], 2					;Comparem que [Player] es major o igual a 2 (jugador 2 o major)
+		jge  reiniciarPlayer			;Si es major o igual saltem a l'etiqueta reiniciarPlayer
+		inc [Player]					;Sino incrementem [Player]
+		jmp bucle						;Saltem al bucle
 
 	reiniciarPlayer:
-		mov [Player], 1
-		jmp bucle
+		mov [Player], 1					;Reiniciem la variable [Player] a 1 (jugador 1)
+		jmp bucle						;Saltem al bucle
 
 	fi:
-	pop eax
+	pop eax								;Recuperem la informació del registre eax guardada a la pila 
 	mov esp, ebp
 	pop ebp
 	ret
@@ -820,32 +820,32 @@ Play proc
 	push ebp
 	mov  ebp, esp
 
-	push eax
+	push eax							;Guardem el registre eax a la pila
 
-	mov  eax, 0
+	mov  eax, 0							;Inicialitzem el registre eax a 0
 
-	call open2Players
+	call open2Players					;Cridem a la subrutina open2Players
 
-	cmp [tecla], 's'
-	je  fi
+	cmp [tecla], 's'					;Comparem si la [tecla] pitjada es s
+	je  fi								;Si es igual saltem a fi
 
-	mov eax, [pairsPlayer1]
-	cmp eax, [pairsPlayer2]
-	je  empatats
-	jg  player1
+	mov eax, [pairsPlayer1]				;Copiem a eax la iformació de [pairsPlayer1]
+	cmp eax, [pairsPlayer2]				;Comparem eax 
+	je  empatats						;Si son iguals saltem a l'etiqueta empatats
+	jg  player1							;Si eax es mes gran saltem a l'etiqueta player1
 	
-	mov [Winner], 2
-	jmp fi
+	mov [Winner], 2						;Sino el Winner es el jugador 2
+	jmp fi								;Saltem a fi
 
 	empatats:
-		mov [Winner], 0
-		jmp fi
+		mov [Winner], 0					;Copiem a [Winner] el valor 0
+		jmp fi							;Saltem a fi
 
 	player1:
-		mov [Winner], 1
+		mov [Winner], 1					;Copiem a [Winner] el valor 1
 
 	fi:
-	pop eax
+	pop eax								;Recuperem la informació del registre eax guardada a la pila 
 	mov esp, ebp
 	pop ebp
 	ret
