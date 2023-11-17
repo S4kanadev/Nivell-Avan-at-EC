@@ -712,26 +712,70 @@ open2Players proc
 	push ebp
 	mov  ebp, esp
 
-	;mostrar parelles conseguides pel jugador 1
-	mov  [rowScreen], 3
-	mov  [colScreen], 50
-	call gotoxy
-	mov  eax, [pairsPlayer1]
-	add  eax, 48
-	mov  [carac], al
-	call printch
+	push eax
 
-	;mostrar parelles conseguides pel jugador 2
-	mov  [rowScreen], 3
-	mov  [colScreen], 57
-	call gotoxy
-	mov  eax, [pairsPlayer2]
-	add  eax, 48
-	mov  [carac], al
-	call printch
+	actualitzarParelles:
+		;mostrar parelles conseguides pel jugador 1
+		mov  [rowScreen], 3
+		mov  [colScreen], 50
+		call gotoxy
+		mov  eax, [pairsPlayer1]
+		;cmp  eax, 'a'
+		;je   imprimir10
+		add  eax, 48
+		mov  [carac], al
+		call printch
+
+
+		;mostrar parelles conseguides pel jugador 2
+		mov  [rowScreen], 3
+		mov  [colScreen], 57
+		call gotoxy
+		mov  eax, [pairsPlayer2]
+		add  eax, 48
+		mov  [carac], al
+		call printch
 
 	call posCurScreen
 
+	bucle:
+		mov eax, [pairsPlayer1]
+		add eax, [pairsPlayer2]
+		cmp eax, 10
+		je fi
+
+		call openPair
+
+		cmp  [tecla], 's'
+		je   fi
+
+		cmp [HitPair], 1
+		jne actualitzarJugador
+
+		cmp [Player], 1
+		jne player2
+
+		inc [pairsPlayer1]
+		mov [HitPair], 0
+		jmp actualitzarParelles
+
+	player2:
+		inc [pairsPlayer2]
+		mov [HitPair], 0
+		jmp actualitzarParelles
+
+	actualitzarJugador:
+		cmp [Player], 2
+		jge  reiniciarPlayer
+		inc [Player]
+		jmp bucle
+
+	reiniciarPlayer:
+		mov [Player], 1
+		jmp bucle
+
+	fi:
+	pop eax
 	mov esp, ebp
 	pop ebp
 	ret
@@ -757,9 +801,32 @@ Play proc
 	push ebp
 	mov  ebp, esp
 
+	push eax
 
+	mov  eax, 0
 
+	call open2Players
 
+	cmp [tecla], 's'
+	je  fi
+
+	mov eax, [pairsPlayer1]
+	cmp eax, [pairsPlayer2]
+	je  empatats
+	jg  player1
+	
+	mov [Winner], 2
+	jmp fi
+
+	empatats:
+		mov [Winner], 0
+		jmp fi
+
+	player1:
+		mov [Winner], 1
+
+	fi:
+	pop eax
 	mov esp, ebp
 	pop ebp
 	ret
