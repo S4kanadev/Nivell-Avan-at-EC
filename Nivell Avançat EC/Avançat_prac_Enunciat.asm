@@ -720,9 +720,17 @@ open2Players proc
 		mov  [colScreen], 50
 		call gotoxy
 		mov  eax, [pairsPlayer1]
-		;cmp  eax, 'a'
-		;je   imprimir10
 		add  eax, 48
+		cmp  eax, 58
+		jne  seguir
+		mov  [carac], 49
+		call printch
+		mov [colScreen], 51
+		mov [carac], 48
+		call printch
+		jmp bucle
+
+	seguir:
 		mov  [carac], al
 		call printch
 
@@ -733,6 +741,17 @@ open2Players proc
 		call gotoxy
 		mov  eax, [pairsPlayer2]
 		add  eax, 48
+		cmp  eax, 58
+		jne  seguir2
+		mov  [carac], 49
+		call printch
+		mov [colScreen], 58
+		mov [carac], 48
+		call printch
+		jmp bucle
+		
+
+	seguir2:
 		mov  [carac], al
 		call printch
 
