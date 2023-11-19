@@ -723,10 +723,10 @@ open2Players proc
 		add  eax, 48					;Sumem 48 del codi ascii al registre eax
 		cmp  eax, 58					;Comparem el registre eax amb el valor 58
 		jne  seguir						;Si no es igual saltem a l'etiqueta seguir
-		mov  [carac], 49				;Si es igual, copiem a [carac] el valor 49 (ascii)
+		mov  [carac], 49				;Si es igual, copiem a [carac] el valor 49 (ascii) = '1'
 		call printch					;Cridem a la subrutina printch per mostrar per pantalla el caracter
 		mov [colScreen], 51				;Copiem a [colScreen] el valor 51
-		mov [carac], 48					;Copiem a [carac] el valor 48 (ascii)
+		mov [carac], 48					;Copiem a [carac] el valor 48 (ascii) = '0'
 		call printch					;Cridem a la subrutina printch per mostrar per pantalla el caracter
 		jmp bucle						;Saltem a l'etiqueta bucle
 
@@ -743,10 +743,10 @@ open2Players proc
 		add  eax, 48					;Sumem 48 del codi ascii al registre eax
 		cmp  eax, 58					;Comparem el registre eax amb el valor 58
 		jne  seguir2					;Si no es igual saltem a l'etiqueta seguir2
-		mov  [carac], 49				;Si es igual, copiem a [carac] el valor 49 (ascii)
+		mov  [carac], 49				;Si es igual, copiem a [carac] el valor 49 (ascii) = '1'
 		call printch					;Cridem a la subrutina printch per mostrar per pantalla el caracter
 		mov [colScreen], 58				;Copiem a [colScreen] el valor 58
-		mov [carac], 48					;Copiem a [carac] el valor 48 (ascii)
+		mov [carac], 48					;Copiem a [carac] el valor 48 (ascii) ='0'
 		call printch					;Cridem a la subrutina printch per mostrar per pantalla el caracter
 		jmp bucle						;Saltem a l'etiqueta bucle
 		
